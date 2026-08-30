@@ -92,6 +92,13 @@ def predict():
 
     results = [predict_with_model(m, image) for m in selected_models]
 
+    for r in results:
+        r['probabilities_percent'] = {
+            label: round(prob * 100, 1)
+            for label, prob in r['probabilities'].items()
+        }
+        r['confidence_percent'] = round(r['confidence'] * 100, 1)
+
     return render_template("report.html", results=results, image_b64=image_b64)
 
 

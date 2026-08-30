@@ -15,7 +15,7 @@
     .prob-row { display: flex; align-items: center; margin-top: 8px; font-size: 0.9rem; }
     .prob-label { width: 60px; }
     .prob-bar-bg { flex: 1; background: #eee; border-radius: 4px; height: 10px; margin: 0 8px; overflow: hidden; }
-    .prob-bar-fill { height: 100%; background: #555; }
+    .prob-bar-fill { height: 100%; background: #555; width: 0; transition: width 0.3s; }
     a.back { display: inline-block; margin-top: 20px; }
   </style>
 </head>
@@ -27,17 +27,30 @@
   <div class="result-card">
     <h3>{{ r.model }}</h3>
     <span class="verdict {{ r.label }}">{{ r.label }}</span>
-    <span>({{ "%.1f"|format(r.confidence * 100) }}% confidenza)</span>
-    {% for label, prob in r.probabilities.items() %}
+    <span>({{ r.confidence_percent }}% confidenza)</span>
+    {% for label, prob_percent in r.probabilities_percent.items() %}
     <div class="prob-row">
       <span class="prob-label">{{ label }}</span>
-      <div class="prob-bar-bg"><div class="prob-bar-fill" style="width: {{ (prob * 100)|round(1) }}%;"></div></div>
-      <span>{{ "%.1f"|format(prob * 100) }}%</span>
+      <div class="prob-bar-bg">
+        <div class="prob-bar-fill" data-width="{{ prob_percent }}"></div>
+      </div>
+      <span>{{ prob_percent }}%</span>
     </div>
     {% endfor %}
   </div>
   {% endfor %}
 
   <a class="back" href="/">&larr; Analizza un'altra immagine</a>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      document.querySelectorAll('.prob-bar-fill').forEach(function(el) {
+        var width = el.getAttribute('data-width');
+        if (width) {
+          el.style.width = width + '%';
+        }
+      });
+    });
+  </script>
 </body>
 </html>

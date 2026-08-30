@@ -1,47 +1,4 @@
-	python -m src.train_resnet
-Caricamento train:
-  data/CIFAKE/train: 4000 immagini
-Caricamento test:
-  data/CIFAKE/test: 1000 immagini
-Classi: ['FAKE', 'REAL']
-Train totale: 4000 immagini, Test totale: 1000 immagini
-Epoch 1, Loss: 0.4886
-Epoch 2, Loss: 0.3848
-^Z
-[2]+  Stopped                 python -m src.train_resnet
-(venv) studente@Laptop-Gio:~/Progetto$ python -m src.train_resnet
-Caricamento train:
-  data/CIFAKE/train: 10000 immagini
-Caricamento test:
-  data/CIFAKE/test: 2000 immagini
-Classi: ['FAKE', 'REAL']
-Train totale: 10000 immagini, Test totale: 2000 immagini
-Epoch 1, Loss: 0.4337
-Epoch 2, Loss: 0.3460
-Epoch 3, Loss: 0.3284
-Epoch 4, Loss: 0.3190
-Epoch 5, Loss: 0.3147
-Epoch 6, Loss: 0.3215
-Epoch 7, Loss: 0.3070
-Epoch 8, Loss: 0.3029
-Epoch 9, Loss: 0.3060
-Epoch 10, Loss: 0.3045
-Training complete
-Test Accuracy: 87.55%
-Confusion Matrix:
-[[857 143]
- [106 894]]
-              precision    recall  f1-score   support
-
-        FAKE       0.89      0.86      0.87      1000
-        REAL       0.86      0.89      0.88      1000
-
-    accuracy                           0.88      2000
-   macro avg       0.88      0.88      0.88      2000
-weighted avg       0.88      0.88      0.88      2000
-
-Modello salvato in models/resnet18_clf.pth
-(venv) studente@Laptop-Gio:~/Progetto$ python -m src.train_resnet
+ python -m src.train_resnet
 Caricamento train:
   data/AI-vs-Real/train: 7667 immagini
 Caricamento test:
