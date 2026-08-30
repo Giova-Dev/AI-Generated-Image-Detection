@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Report - AI Image Detector</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 50px auto; padding: 0 16px; }
+    h1 { font-size: 1.4rem; }
+    img.uploaded { max-width: 100%; max-height: 260px; border-radius: 8px; margin: 16px 0; }
+    .result-card { border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin-bottom: 14px; }
+    .result-card h3 { margin: 0 0 8px 0; font-size: 1rem; font-family: monospace; }
+    .verdict { display: inline-block; padding: 4px 10px; border-radius: 6px; font-weight: bold; }
+    .verdict.REAL { background: #e6f4ea; color: #1e7e34; }
+    .verdict.FAKE { background: #fdecea; color: #c0392b; }
+    .prob-row { display: flex; align-items: center; margin-top: 8px; font-size: 0.9rem; }
+    .prob-label { width: 60px; }
+    .prob-bar-bg { flex: 1; background: #eee; border-radius: 4px; height: 10px; margin: 0 8px; overflow: hidden; }
+    .prob-bar-fill { height: 100%; background: #555; }
+    a.back { display: inline-block; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Report</h1>
+  <img class="uploaded" src="data:image/jpeg;base64,{{ image_b64 }}" alt="Immagine caricata">
+
+  {% for r in results %}
+  <div class="result-card">
+    <h3>{{ r.model }}</h3>
+    <span class="verdict {{ r.label }}">{{ r.label }}</span>
+    <span>({{ "%.1f"|format(r.confidence * 100) }}% confidenza)</span>
+    {% for label, prob in r.probabilities.items() %}
+    <div class="prob-row">
+      <span class="prob-label">{{ label }}</span>
+      <div class="prob-bar-bg"><div class="prob-bar-fill" style="width: {{ (prob * 100)|round(1) }}%;"></div></div>
+      <span>{{ "%.1f"|format(prob * 100) }}%</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+
+  <a class="back" href="/">&larr; Analizza un'altra immagine</a>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Image Detector</title>
+  <style>
+    body { font-family: sans-serif; max-width: 520px; margin: 50px auto; padding: 0 16px; }
+    h1 { font-size: 1.4rem; }
+    .dropzone {
+      border: 2px dashed #999; border-radius: 10px; padding: 30px;
+      text-align: center; cursor: pointer; color: #555; margin-top: 16px;
+    }
+    .dropzone.dragover { border-color: #333; background: #f5f5f5; }
+    .dropzone img { max-width: 100%; max-height: 220px; margin-top: 12px; border-radius: 6px; }
+    fieldset { margin-top: 20px; border-radius: 8px; }
+    fieldset label { display: block; margin: 6px 0; }
+    button { margin-top: 20px; padding: 10px 20px; font-size: 1rem; cursor: pointer; }
+    .error { color: #c0392b; margin-top: 12px; }
+    .empty { color: #999; font-style: italic; }
+  </style>
+</head>
+<body>
+  <h1>AI-Generated Image Detector</h1>
+  <p>Trascina un'immagine, scegli uno o piu' modelli, ottieni il report.</p>
+
+  <form action="/predict" method="post" enctype="multipart/form-data">
+    <div class="dropzone" id="dropzone">
+      <p id="dropzoneText">Trascina qui un'immagine, o clicca per selezionarla</p>
+      <input type="file" name="image" id="fileInput" accept="image/*" hidden required>
+      <img id="preview" style="display:none;">
+    </div>
+
+    <fieldset>
+      <legend>Modelli da eseguire</legend>
+      {% if available_models %}
+        {% for m in available_models %}
+        <label><input type="checkbox" name="models" value="{{ m }}" checked> {{ m }}</label>
+        {% endfor %}
+      {% else %}
+        <p class="empty">Nessun modello trovato in models/. Allena prima un modello (es. python -m src.train_resnet).</p>
+      {% endif %}
+    </fieldset>
+
+    <button type="submit" {% if not available_models %}disabled{% endif %}>Analizza</button>
+  </form>
+
+  {% if error %}
+  <p class="error">{{ error }}</p>
+  {% endif %}
+
+  <script>
+    const dropzone = document.getElementById('dropzone');
+    const dropzoneText = document.getElementById('dropzoneText');
+    const fileInput = document.getElementById('fileInput');
+    const preview = document.getElementById('preview');
+
+    dropzone.addEventListener('click', () => fileInput.click());
+
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      if (e.dataTransfer.files.length) {
+        fileInput.files = e.dataTransfer.files;
+        showPreview(fileInput.files[0]);
+      }
+    });
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length) showPreview(fileInput.files[0]);
+    });
+    function showPreview(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+        dropzoneText.textContent = file.name;
+      };
+      reader.readAsDataURL(file);
+    }
+  </script>
+</body>
+</html>

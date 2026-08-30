@@ -2,3 +2,5 @@ torch
 torchvision
 pillow
 scikit-learn
+datasets
+flask
