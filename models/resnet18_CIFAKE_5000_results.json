@@ -1,0 +1,65 @@
+{
+  "output_name": "resnet18_CIFAKE_5000",
+  "data_dirs": [
+    "data/CIFAKE"
+  ],
+  "n_per_class_train": 5000,
+  "n_per_class_test": 1000,
+  "num_epochs": 10,
+  "class_names": [
+    "FAKE",
+    "REAL"
+  ],
+  "train_size": 10000,
+  "test_size": 2000,
+  "epoch_losses": [
+    0.44517880302077284,
+    0.34699638992452775,
+    0.3263444253526176,
+    0.3220833027705598,
+    0.32444591667895883,
+    0.3090341003796163,
+    0.3068871547381718,
+    0.31269992754672665,
+    0.31156599390716216,
+    0.30598444201218816
+  ],
+  "test_accuracy": 86.6,
+  "confusion_matrix": [
+    [
+      817,
+      183
+    ],
+    [
+      85,
+      915
+    ]
+  ],
+  "classification_report": {
+    "FAKE": {
+      "precision": 0.9057649667405765,
+      "recall": 0.817,
+      "f1-score": 0.8590956887486856,
+      "support": 1000.0
+    },
+    "REAL": {
+      "precision": 0.8333333333333334,
+      "recall": 0.915,
+      "f1-score": 0.8722592945662536,
+      "support": 1000.0
+    },
+    "accuracy": 0.866,
+    "macro avg": {
+      "precision": 0.869549150036955,
+      "recall": 0.866,
+      "f1-score": 0.8656774916574697,
+      "support": 2000.0
+    },
+    "weighted avg": {
+      "precision": 0.8695491500369549,
+      "recall": 0.866,
+      "f1-score": 0.8656774916574695,
+      "support": 2000.0
+    }
+  }
+}
