@@ -1,10 +1,14 @@
 """
-Fine-tuning dell'ultimo layer di ResNet18 per classificare REAL/FAKE su CIFAKE.
-Basato sul codice dell'esercitazione, adattato a data/train e data/test.
+Fine-tuning dell'ultimo layer di ResNet18 per classificare REAL/FAKE.
 
 Uso:
     python -m src.train_resnet
+
+    python -m src.train_resnet --datasets CIFAKE --n_per_class_train 5000
+    python -m src.train_resnet --datasets AI-vs-Real --n_per_class_train 3000 --n_per_class_test 1000
 """
+import argparse
+import json
 import random
 from pathlib import Path
 
@@ -18,10 +22,21 @@ from torch.utils.data import ConcatDataset, DataLoader, Subset
 from torchvision import datasets, transforms
 
 MODEL_DIR = Path("models")
-N_PER_CLASS_TRAIN = 5000
-N_PER_CLASS_TEST = 1000
 NUM_EPOCHS = 10
 SEED = 42
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--datasets", nargs="+", default=["CIFAKE"],
+                     help="Sottocartelle di data/ da usare, es. --datasets CIFAKE AI-vs-Real")
+parser.add_argument("--n_per_class_train", type=int, default=5000,
+                     help="Immagini per classe, per ciascun dataset, nel train")
+parser.add_argument("--n_per_class_test", type=int, default=1000,
+                     help="Immagini per classe, per ciascun dataset, nel test")
+parser.add_argument("--output_name", default=None,
+                     help="Nome del checkpoint (default: generato da dataset e dimensione)")
+args = parser.parse_args()
+
+output_name = args.output_name or f"resnet18_{'-'.join(args.datasets)}_{args.n_per_class_train}"
 
 # Define transformations
 transform = transforms.Compose([
@@ -44,13 +59,12 @@ def balanced_subset(dataset, n_per_class, seed=SEED):
     return Subset(dataset, selected)
 
 
-# Load dataset: una o piu' cartelle root, ciascuna con sottocartelle REAL/FAKE.
-# Aggiungi/rimuovi root per scegliere quali dataset usare (devono avere la
-# stessa struttura di cartelle, es. CIFAKE e data_aivsreal/ dopo il download).
-DATA_DIRS = [
-    # Path("data/CIFAKE"),              # CIFAKE
-    Path("data/AI-vs-Real"),        # AI-vs-Real (decommenta per includerlo)
-]
+# Load dataset: una o piu' cartelle root (data/<nome>), ciascuna con
+# sottocartelle train/test contenenti REAL/FAKE. Scelte via --datasets.
+DATA_DIRS = [Path("data") / name for name in args.datasets]
+for d in DATA_DIRS:
+    if not d.exists():
+        raise FileNotFoundError(f"Cartella dataset non trovata: {d}")
 
 
 def load_combined(split: str, n_per_class: int):
@@ -71,9 +85,9 @@ def load_combined(split: str, n_per_class: int):
 
 
 print("Caricamento train:")
-train_data, class_names = load_combined("train", N_PER_CLASS_TRAIN)
+train_data, class_names = load_combined("train", args.n_per_class_train)
 print("Caricamento test:")
-test_data, _ = load_combined("test", N_PER_CLASS_TEST)
+test_data, _ = load_combined("test", args.n_per_class_test)
 
 print(f"Classi: {class_names}")
 print(f"Train totale: {len(train_data)} immagini, Test totale: {len(test_data)} immagini")
@@ -100,6 +114,7 @@ criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.fc.parameters(), lr=0.001)
 
 # Training loop
+epoch_losses = []
 for epoch in range(NUM_EPOCHS):
     model.train()
     running_loss = 0.0
@@ -120,7 +135,9 @@ for epoch in range(NUM_EPOCHS):
 
         running_loss += loss.item()
 
-    print(f'Epoch {epoch+1}, Loss: {running_loss/len(train_loader):.4f}')
+    epoch_loss = running_loss / len(train_loader)
+    epoch_losses.append(epoch_loss)
+    print(f'Epoch {epoch+1}, Loss: {epoch_loss:.4f}')
 
 print('Training complete')
 
@@ -155,6 +172,7 @@ with torch.no_grad():
 cm = confusion_matrix(all_labels, all_preds)
 print("Confusion Matrix:")
 print(cm)
+report_dict = classification_report(all_labels, all_preds, target_names=class_names, output_dict=True)
 print(classification_report(all_labels, all_preds, target_names=class_names))
 
 # Salvataggio modello + nomi classi
@@ -162,8 +180,27 @@ MODEL_DIR.mkdir(parents=True, exist_ok=True)
 torch.save({
     "model_state_dict": model.state_dict(),
     "class_names": class_names,
-}, MODEL_DIR / "resnet18_clf.pth")
-print(f"Modello salvato in {MODEL_DIR / 'resnet18_clf.pth'}")
+}, MODEL_DIR / f"{output_name}.pth")
+print(f"Modello salvato in {MODEL_DIR / f'{output_name}.pth'}")
+
+# Salvataggio risultati (loss, accuracy, confusion matrix, classification report)
+results = {
+    "output_name": output_name,
+    "data_dirs": [str(d) for d in DATA_DIRS],
+    "n_per_class_train": args.n_per_class_train,
+    "n_per_class_test": args.n_per_class_test,
+    "num_epochs": NUM_EPOCHS,
+    "class_names": class_names,
+    "train_size": len(train_data),
+    "test_size": len(test_data),
+    "epoch_losses": epoch_losses,
+    "test_accuracy": accuracy,
+    "confusion_matrix": cm.tolist(),
+    "classification_report": report_dict,
+}
+with open(MODEL_DIR / f"{output_name}_results.json", "w") as f:
+    json.dump(results, f, indent=2)
+print(f"Risultati salvati in {MODEL_DIR / f'{output_name}_results.json'}")
 
 
 def predict_image(image_path, model, transform, class_names):
@@ -177,9 +214,3 @@ def predict_image(image_path, model, transform, class_names):
         probability = torch.nn.functional.softmax(output, dim=1)[0]
 
     return class_names[predicted.item()], probability[predicted.item()].item()
-
-
-# Example usage
-# image_path = 'image.jpg'
-# class_name, confidence = predict_image(image_path, model, transform, class_names)
-# print(f'Predicted: {class_name} with confidence {confidence:.2f}')

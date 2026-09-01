@@ -1,7 +1,6 @@
 """
 Scarica un subset di Parveshiiii/AI-vs-Real e lo salva su disco in cartelle
-REAL/FAKE, con la stessa struttura usata per CIFAKE (cosi' i due dataset si
-possono combinare con ImageFolder + ConcatDataset in train_resnet.py).
+REAL/FAKE..
 
 Nota: il dataset espone solo lo split "train" via Hugging Face; lo split
 train/test qui e' fatto internamente con train_test_split.

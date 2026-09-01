@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Performance Modelli - AI Image Detector</title>
+  <style>
+    body { font-family: sans-serif; max-width: 700px; margin: 50px auto; padding: 0 16px; }
+    h1 { font-size: 1.4rem; }
+    a.back { display: inline-block; margin-bottom: 20px; }
+    .model-card { border: 1px solid #ddd; border-radius: 8px; padding: 18px; margin-bottom: 20px; }
+    .model-card h2 { margin: 0 0 8px 0; font-size: 1.1rem; font-family: monospace; }
+    .meta { color: #666; font-size: 0.85rem; margin-bottom: 12px; }
+    .accuracy { font-size: 1.3rem; font-weight: bold; margin: 10px 0; }
+    table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 0.88rem; }
+    th, td { border: 1px solid #eee; padding: 6px 10px; text-align: center; }
+    th { background: #f7f7f7; }
+    .empty { color: #999; font-style: italic; }
+    details { margin-top: 10px; }
+    summary { cursor: pointer; color: #555; }
+  </style>
+</head>
+<body>
+  <a class="back" href="/">&larr; Torna alla home</a>
+  <h1>Performance Modelli</h1>
+
+  {% if not results %}
+  <p class="empty">Nessun risultato trovato in models/. Allena un modello con python -m src.train_resnet.</p>
+  {% endif %}
+
+  {% for r in results %}
+  <div class="model-card">
+    <h2>{{ r.output_name }}</h2>
+    <div class="meta">
+      Dataset: {{ r.data_dirs | join(", ") }} &middot;
+      {{ r.n_per_class_train }} img/classe (train), {{ r.n_per_class_test }} img/classe (test) &middot;
+      {{ r.num_epochs }} epoche &middot;
+      Train: {{ r.train_size }} immagini, Test: {{ r.test_size }} immagini
+    </div>
+
+    <div class="accuracy">Test Accuracy: {{ "%.2f"|format(r.test_accuracy) }}%</div>
+
+    <table>
+      <tr>
+        <th>Classe</th><th>Precision</th><th>Recall</th><th>F1-score</th><th>Support</th>
+      </tr>
+      {% for class_name in r.class_names %}
+      <tr>
+        <td>{{ class_name }}</td>
+        <td>{{ "%.2f"|format(r.classification_report[class_name].precision) }}</td>
+        <td>{{ "%.2f"|format(r.classification_report[class_name].recall) }}</td>
+        <td>{{ "%.2f"|format(r.classification_report[class_name]["f1-score"]) }}</td>
+        <td>{{ r.classification_report[class_name].support|int }}</td>
+      </tr>
+      {% endfor %}
+      <tr>
+        <td>macro avg</td>
+        <td>{{ "%.2f"|format(r.classification_report["macro avg"].precision) }}</td>
+        <td>{{ "%.2f"|format(r.classification_report["macro avg"].recall) }}</td>
+        <td>{{ "%.2f"|format(r.classification_report["macro avg"]["f1-score"]) }}</td>
+        <td>{{ r.classification_report["macro avg"].support|int }}</td>
+      </tr>
+    </table>
+
+    <details>
+      <summary>Confusion matrix</summary>
+      <table>
+        <tr>
+          <th></th>
+          {% for c in r.class_names %}<th>pred. {{ c }}</th>{% endfor %}
+        </tr>
+        {% for row in r.confusion_matrix %}
+        <tr>
+          <th>vero {{ r.class_names[loop.index0] }}</th>
+          {% for cell in row %}<td>{{ cell }}</td>{% endfor %}
+        </tr>
+        {% endfor %}
+      </table>
+    </details>
+
+    <details>
+      <summary>Loss per epoca</summary>
+      <table>
+        <tr>
+          {% for _ in r.epoch_losses %}<th>{{ loop.index }}</th>{% endfor %}
+        </tr>
+        <tr>
+          {% for loss in r.epoch_losses %}<td>{{ "%.3f"|format(loss) }}</td>{% endfor %}
+        </tr>
+      </table>
+    </details>
+  </div>
+  {% endfor %}
+</body>
+</html>
