@@ -9,7 +9,7 @@ Uso:
 import base64
 import io
 from pathlib import Path
-
+import json
 import torch
 import torch.nn as nn
 import torchvision.models as models
@@ -34,6 +34,12 @@ _model_cache = {}
 def list_available_models():
     return sorted(p.name for p in MODEL_DIR.glob("*.pth"))
 
+def list_results():
+    results = []
+    for json_path in sorted(MODEL_DIR.glob("*_results.json")):
+        with open(json_path) as f:
+            results.append(json.load(f))
+    return results
 
 def load_model(filename):
     if filename in _model_cache:
@@ -116,6 +122,9 @@ def api_predict():
     results = [predict_with_model(m, image) for m in selected_models]
     return jsonify({"results": results})
 
+@app.route("/performance", methods=["GET"])
+def performance():
+    return render_template("performance.html", results=list_results())
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=False)
