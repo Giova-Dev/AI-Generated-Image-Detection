@@ -1,4 +1,4 @@
-data/CIFAKE/
-data/AI-vs-Real/
+data/
 venv/
+venv311/
 src/__pycache__/
