@@ -22,6 +22,7 @@ from torch.utils.data import ConcatDataset, DataLoader, Subset
 from torchvision import datasets, transforms
 
 MODEL_DIR = Path("models")
+REPORT_DIR = Path("reports")
 NUM_EPOCHS = 10
 SEED = 42
 
@@ -218,6 +219,7 @@ def main():
     print(f"Modello salvato in {MODEL_DIR / f'{output_name}.pth'}")
 
     # Salvataggio risultati (loss, accuracy, confusion matrix, classification report)
+    REPORT_DIR.mkdir(parents=True, exist_ok=True)
     results = {
         "output_name": output_name,
         "data_dirs": [str(d) for d in data_dirs],
@@ -232,9 +234,9 @@ def main():
         "confusion_matrix": cm.tolist(),
         "classification_report": report_dict,
     }
-    with open(MODEL_DIR / f"{output_name}_results.json", "w") as f:
+    with open(REPORT_DIR / f"{output_name}_results.json", "w") as f:
         json.dump(results, f, indent=2)
-    print(f"Risultati salvati in {MODEL_DIR / f'{output_name}_results.json'}")
+    print(f"Risultati salvati in {REPORT_DIR / f'{output_name}_results.json'}")
 
 
 if __name__ == "__main__":

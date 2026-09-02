@@ -18,6 +18,7 @@ from PIL import Image
 from torchvision import transforms
 
 MODEL_DIR = Path("models")
+REPORT_DIR = Path("reports")
 
 app = Flask(__name__)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -36,7 +37,7 @@ def list_available_models():
 
 def list_results():
     results = []
-    for json_path in sorted(MODEL_DIR.glob("*_results.json")):
+    for json_path in sorted(REPORT_DIR.glob("*_results.json")):
         with open(json_path) as f:
             results.append(json.load(f))
     return results
