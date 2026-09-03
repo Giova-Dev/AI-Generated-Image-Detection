@@ -4,6 +4,7 @@ Classificazione REAL/FAKE con feature CLIP (congelato) + Logistic Regression.
 Uso:
     python -m src.train_scikit
     python -m src.train_scikit --datasets CIFAKE AI-vs-Real --n_per_class_train 3000
+    python -m src.train_scikit --datasets AI-vs-Real --all --batch_size 64
 """
 import argparse
 import json
@@ -86,6 +87,8 @@ def main():
                          help="Nome del checkpoint (default: generato da dataset e dimensione)")
     parser.add_argument("--num_workers", type=int, default=4,
                          help="Processi paralleli per il caricamento immagini")
+    parser.add_argument("--batch_size", type=int, default=256,
+                         help="Batch size per l'estrazione feature")
     args = parser.parse_args()
 
     n_per_class_train = None if args.all else args.n_per_class_train
@@ -115,11 +118,11 @@ def main():
     print(f"Train totale: {len(train_data)} immagini, Test totale: {len(test_data)} immagini")
 
     train_loader = DataLoader(
-        train_data, batch_size=256,
+        train_data, batch_size=args.batch_size,
         num_workers=args.num_workers, pin_memory=(device.type == "cuda"),
     )
     test_loader = DataLoader(
-        test_data, batch_size=256,
+        test_data, batch_size=args.batch_size,
         num_workers=args.num_workers, pin_memory=(device.type == "cuda"),
     )
 
