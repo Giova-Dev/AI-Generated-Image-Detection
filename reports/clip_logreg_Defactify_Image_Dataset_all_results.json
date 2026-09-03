@@ -1,0 +1,54 @@
+{
+  "output_name": "clip_logreg_Defactify_Image_Dataset_all",
+  "data_dirs": [
+    "data/Defactify_Image_Dataset"
+  ],
+  "n_per_class_train": "all",
+  "n_per_class_test": "all",
+  "num_epochs": "N/A",
+  "class_names": [
+    "FAKE",
+    "REAL"
+  ],
+  "train_size": 37000,
+  "test_size": 4585,
+  "epoch_losses": [],
+  "test_accuracy": 95.2453653217012,
+  "confusion_matrix": [
+    [
+      2873,
+      127
+    ],
+    [
+      91,
+      1494
+    ]
+  ],
+  "classification_report": {
+    "FAKE": {
+      "precision": 0.9692982456140351,
+      "recall": 0.9576666666666667,
+      "f1-score": 0.9634473507712944,
+      "support": 3000.0
+    },
+    "REAL": {
+      "precision": 0.9216533004318322,
+      "recall": 0.9425867507886435,
+      "f1-score": 0.9320024953212727,
+      "support": 1585.0
+    },
+    "accuracy": 0.952453653217012,
+    "macro avg": {
+      "precision": 0.9454757730229337,
+      "recall": 0.950126708727655,
+      "f1-score": 0.9477249230462835,
+      "support": 4585.0
+    },
+    "weighted avg": {
+      "precision": 0.9528277465706781,
+      "recall": 0.952453653217012,
+      "f1-score": 0.9525771008501855,
+      "support": 4585.0
+    }
+  }
+}

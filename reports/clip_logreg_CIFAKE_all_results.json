@@ -1,0 +1,54 @@
+{
+  "output_name": "clip_logreg_CIFAKE_all",
+  "data_dirs": [
+    "data/CIFAKE"
+  ],
+  "n_per_class_train": "all",
+  "n_per_class_test": "all",
+  "num_epochs": "N/A",
+  "class_names": [
+    "FAKE",
+    "REAL"
+  ],
+  "train_size": 100000,
+  "test_size": 20000,
+  "epoch_losses": [],
+  "test_accuracy": 94.695,
+  "confusion_matrix": [
+    [
+      9441,
+      559
+    ],
+    [
+      502,
+      9498
+    ]
+  ],
+  "classification_report": {
+    "FAKE": {
+      "precision": 0.9495122196520165,
+      "recall": 0.9441,
+      "f1-score": 0.9467983753698039,
+      "support": 10000.0
+    },
+    "REAL": {
+      "precision": 0.9444168241026151,
+      "recall": 0.9498,
+      "f1-score": 0.947100762825946,
+      "support": 10000.0
+    },
+    "accuracy": 0.94695,
+    "macro avg": {
+      "precision": 0.9469645218773157,
+      "recall": 0.94695,
+      "f1-score": 0.946949569097875,
+      "support": 20000.0
+    },
+    "weighted avg": {
+      "precision": 0.946964521877316,
+      "recall": 0.94695,
+      "f1-score": 0.9469495690978751,
+      "support": 20000.0
+    }
+  }
+}

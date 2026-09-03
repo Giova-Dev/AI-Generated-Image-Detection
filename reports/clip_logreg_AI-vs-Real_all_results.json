@@ -1,0 +1,54 @@
+{
+  "output_name": "clip_logreg_AI-vs-Real_all",
+  "data_dirs": [
+    "data/AI-vs-Real"
+  ],
+  "n_per_class_train": "all",
+  "n_per_class_test": "all",
+  "num_epochs": "N/A",
+  "class_names": [
+    "FAKE",
+    "REAL"
+  ],
+  "train_size": 11199,
+  "test_size": 2666,
+  "epoch_losses": [],
+  "test_accuracy": 99.77494373593399,
+  "confusion_matrix": [
+    [
+      663,
+      3
+    ],
+    [
+      3,
+      1997
+    ]
+  ],
+  "classification_report": {
+    "FAKE": {
+      "precision": 0.9954954954954955,
+      "recall": 0.9954954954954955,
+      "f1-score": 0.9954954954954955,
+      "support": 666.0
+    },
+    "REAL": {
+      "precision": 0.9985,
+      "recall": 0.9985,
+      "f1-score": 0.9985,
+      "support": 2000.0
+    },
+    "accuracy": 0.9977494373593399,
+    "macro avg": {
+      "precision": 0.9969977477477479,
+      "recall": 0.9969977477477479,
+      "f1-score": 0.9969977477477479,
+      "support": 2666.0
+    },
+    "weighted avg": {
+      "precision": 0.9977494373593399,
+      "recall": 0.9977494373593399,
+      "f1-score": 0.9977494373593399,
+      "support": 2666.0
+    }
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "output_name": "resnet18_Defactify_Image_Dataset_all",
+  "data_dirs": [
+    "data/Defactify_Image_Dataset"
+  ],
+  "n_per_class_train": "all",
+  "n_per_class_test": "all",
+  "num_epochs": 10,
+  "class_names": [
+    "FAKE",
+    "REAL"
+  ],
+  "train_size": 37000,
+  "test_size": 4585,
+  "epoch_losses": [
+    0.3369883926796213,
+    0.290117901868236,
+    0.28870790151681175,
+    0.2850571901327387,
+    0.2854054650048707,
+    0.28200203122035017,
+    0.2805785448865944,
+    0.2821180201397183,
+    0.28018303565172253,
+    0.28334892511548104
+  ],
+  "test_accuracy": 82.26826608505998,
+  "confusion_matrix": [
+    [
+      2731,
+      269
+    ],
+    [
+      544,
+      1041
+    ]
+  ],
+  "classification_report": {
+    "FAKE": {
+      "precision": 0.8338931297709924,
+      "recall": 0.9103333333333333,
+      "f1-score": 0.8704382470119522,
+      "support": 3000.0
+    },
+    "REAL": {
+      "precision": 0.7946564885496183,
+      "recall": 0.656782334384858,
+      "f1-score": 0.7191709844559585,
+      "support": 1585.0
+    },
+    "accuracy": 0.8226826608505998,
+    "macro avg": {
+      "precision": 0.8142748091603054,
+      "recall": 0.7835578338590956,
+      "f1-score": 0.7948046157339553,
+      "support": 4585.0
+    },
+    "weighted avg": {
+      "precision": 0.8203293181383036,
+      "recall": 0.8226826608505998,
+      "f1-score": 0.8181462925623885,
+      "support": 4585.0
+    }
+  }
+}
