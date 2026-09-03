@@ -1,15 +1,18 @@
 """
 App Flask per il rilevamento di immagini generate da AI.
-Permette di scegliere uno o piu' modelli (.pth in models/) e mostra
-un report comparativo dei risultati.
+Permette di scegliere uno o piu' modelli (.pth ResNet18 o .pkl scikit-learn
+in models/) e mostra un report comparativo dei risultati.
 
 Uso:
     python app/app.py
 """
 import base64
 import io
-from pathlib import Path
 import json
+import pickle
+from pathlib import Path
+
+import open_clip
 import torch
 import torch.nn as nn
 import torchvision.models as models
@@ -23,17 +26,19 @@ REPORT_DIR = Path("reports")
 app = Flask(__name__)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-transform = transforms.Compose([
+resnet_transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
     transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 ])
 
-_model_cache = {}
+_model_cache = {}  # filename -> (kind, oggetto_modello, class_names)
+_clip = None  # lazy: serve solo se viene selezionato un modello .pkl
 
 
 def list_available_models():
-    return sorted(p.name for p in MODEL_DIR.glob("*.pth"))
+    return sorted(p.name for p in MODEL_DIR.iterdir() if p.suffix in (".pth", ".pkl"))
+
 
 def list_results():
     results = []
@@ -42,31 +47,61 @@ def list_results():
             results.append(json.load(f))
     return results
 
+
+def get_clip():
+    global _clip
+    if _clip is None:
+        clip_model, _, clip_preprocess = open_clip.create_model_and_transforms(
+            "ViT-B-32-quickgelu", pretrained="openai"
+        )
+        clip_model.eval().to(device)
+        _clip = (clip_model, clip_preprocess)
+    return _clip
+
+
 def load_model(filename):
     if filename in _model_cache:
         return _model_cache[filename]
 
-    checkpoint = torch.load(MODEL_DIR / filename, map_location=device)
-    class_names = checkpoint["class_names"]
+    path = MODEL_DIR / filename
 
-    model = models.resnet18(weights=None)
-    model.fc = nn.Linear(model.fc.in_features, len(class_names))
-    model.load_state_dict(checkpoint["model_state_dict"])
-    model.eval().to(device)
+    if path.suffix == ".pth":
+        checkpoint = torch.load(path, map_location=device)
+        class_names = checkpoint["class_names"]
+        model = models.resnet18(weights=None)
+        model.fc = nn.Linear(model.fc.in_features, len(class_names))
+        model.load_state_dict(checkpoint["model_state_dict"])
+        model.eval().to(device)
+        entry = ("resnet", model, class_names)
 
-    _model_cache[filename] = (model, class_names)
-    return model, class_names
+    elif path.suffix == ".pkl":
+        with open(path, "rb") as f:
+            checkpoint = pickle.load(f)
+        entry = ("sklearn", checkpoint["clf"], checkpoint["class_names"])
+
+    else:
+        raise ValueError(f"Formato modello non supportato: {filename}")
+
+    _model_cache[filename] = entry
+    return entry
 
 
 def predict_with_model(filename, image):
-    model, class_names = load_model(filename)
-    img_tensor = transform(image).unsqueeze(0).to(device)
+    kind, model_obj, class_names = load_model(filename)
 
-    with torch.no_grad():
-        output = model(img_tensor)
-        probs = torch.nn.functional.softmax(output, dim=1)[0]
+    if kind == "resnet":
+        img_tensor = resnet_transform(image).unsqueeze(0).to(device)
+        with torch.no_grad():
+            output = model_obj(img_tensor)
+            probs = torch.nn.functional.softmax(output, dim=1)[0].cpu().numpy()
+    else:
+        clip_model, clip_preprocess = get_clip()
+        img_tensor = clip_preprocess(image).unsqueeze(0).to(device)
+        with torch.no_grad():
+            features = clip_model.encode_image(img_tensor).cpu().numpy()
+        probs = model_obj.predict_proba(features)[0]
 
-    predicted_idx = int(torch.argmax(probs).item())
+    predicted_idx = int(probs.argmax())
     return {
         "model": filename,
         "label": class_names[predicted_idx],
@@ -123,9 +158,11 @@ def api_predict():
     results = [predict_with_model(m, image) for m in selected_models]
     return jsonify({"results": results})
 
+
 @app.route("/performance", methods=["GET"])
 def performance():
     return render_template("performance.html", results=list_results())
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=False)
