@@ -4,3 +4,4 @@ pillow
 scikit-learn
 datasets
 flask
+open_clip_torch
