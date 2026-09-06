@@ -5,3 +5,6 @@ scikit-learn
 datasets
 flask
 open_clip_torch
+pandas
+matplotlib
+seaborn
