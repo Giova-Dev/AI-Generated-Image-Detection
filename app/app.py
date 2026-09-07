@@ -32,8 +32,8 @@ resnet_transform = transforms.Compose([
     transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 ])
 
-_model_cache = {}  # filename -> (kind, oggetto_modello, class_names)
-_clip = None  # lazy: serve solo se viene selezionato un modello .pkl
+_model_cache = {}
+_clip = None
 
 
 def list_available_models():
