@@ -3,4 +3,4 @@ data/
 venv/
 venv311/
 src/__pycache__/
-reports/eda/
+eda/

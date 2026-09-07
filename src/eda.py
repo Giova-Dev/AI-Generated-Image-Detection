@@ -16,7 +16,7 @@ import seaborn as sns
 from PIL import Image
 
 DATA_DIR = Path("data")
-OUT_DIR = Path("reports/eda")
+OUT_DIR = Path("eda")
 SEED = 42
 COMMON_SIZE = (128, 128)
 
