@@ -50,10 +50,7 @@ def find_split_files(dataset_dir):
 def make_streaming_split(ds, test_fraction=0.2):
     """Split train/test deterministico che resta in streaming: una riga ogni
     1/test_fraction va al test, le altre al train. Usato quando il dataset non
-    ha un file di test separato: un train_test_split normale richiederebbe di
-    caricare l'intero dataset in RAM (rischio concreto di OOM/crash su dataset
-    grandi e macchine con poca memoria, es. WSL con limiti stretti di default).
-    """
+    ha un file di test separato."""
     modulo = round(1 / test_fraction)
     train_ds = ds.filter(lambda ex, idx: idx % modulo != 0, with_indices=True)
     test_ds = ds.filter(lambda ex, idx: idx % modulo == 0, with_indices=True)
@@ -61,6 +58,7 @@ def make_streaming_split(ds, test_fraction=0.2):
  
  
 def count_labels(ds, label_column, real_value):
+    """Conta REAL/FAKE leggendo solo label_column."""
     ds = ds.select_columns([label_column]) if hasattr(ds, "select_columns") else ds
     counts = {"REAL": 0, "FAKE": 0}
     for i, example in enumerate(ds, start=1):
@@ -72,11 +70,8 @@ def count_labels(ds, label_column, real_value):
  
  
 def extract_split(ds, label_column, real_value, out_split_dir, n_per_class, all_mode, shuffle_buffer):
-    ds = ds.shuffle(seed=SEED, buffer_size=shuffle_buffer)
-    ds_iter = iter(ds)
-    first_example = next(ds_iter)
-    image_column = detect_image_column(first_example)
- 
+    # il conteggio va fatto PRIMA dello shuffle, altrimenti riempire il buffer
+    # di shuffle forza gia' la decodifica delle immagini bufferizzate
     if all_mode:
         print("  Conteggio etichette...", flush=True)
         available = count_labels(ds, label_column, real_value)
@@ -84,6 +79,11 @@ def extract_split(ds, label_column, real_value, out_split_dir, n_per_class, all_
         print(f"  Disponibili: {available['REAL']} REAL, {available['FAKE']} FAKE -> uso {quota} per classe", flush=True)
     else:
         quota = n_per_class
+ 
+    ds = ds.shuffle(seed=SEED, buffer_size=shuffle_buffer)
+    ds_iter = iter(ds)
+    first_example = next(ds_iter)
+    image_column = detect_image_column(first_example)
  
     counts = {"REAL": 0, "FAKE": 0}
     for folder in counts:
@@ -129,21 +129,44 @@ def process_dataset(dataset_dir, n_per_class, all_mode, shuffle_buffer):
     if test_files:
         train_ds = load_dataset("parquet", data_files=train_files, split="train", streaming=True)
         test_ds = load_dataset("parquet", data_files=test_files, split="train", streaming=True)
-    else:
-        # nessun file di test separato: split 80/20 in streaming (vedi make_streaming_split)
-        full_ds = load_dataset("parquet", data_files=train_files, split="train", streaming=True)
-        train_ds, test_ds = make_streaming_split(full_ds, test_fraction=0.2)
  
-    real_value_raw = cfg["real_value"]
-    first = next(iter(train_ds))
-    real_value = type(first[cfg["label_column"]])(real_value_raw)
+        first = next(iter(train_ds))
+        real_value = type(first[cfg["label_column"]])(cfg["real_value"])
+ 
+        print(" Split: train")
+        extract_split(train_ds, cfg["label_column"], real_value, DATA_DIR / name / "train",
+                       n_per_class, all_mode, shuffle_buffer)
+        print(" Split: test")
+        extract_split(test_ds, cfg["label_column"], real_value, DATA_DIR / name / "test",
+                       n_per_class, all_mode, shuffle_buffer)
+        return
+ 
+    raw_ds = load_dataset("parquet", data_files=train_files, split="train", streaming=True)
+    first = next(iter(raw_ds))
+    real_value = type(first[cfg["label_column"]])(cfg["real_value"])
+ 
+    if all_mode:
+        print(" Conteggio etichette sull'intero file...", flush=True)
+        raw_ds = load_dataset("parquet", data_files=train_files, split="train", streaming=True)
+        available = count_labels(raw_ds, cfg["label_column"], real_value)
+        total_quota = min(available.values())
+        train_quota = round(total_quota * 0.8)
+        test_quota = total_quota - train_quota
+        print(f" Disponibili: {available['REAL']} REAL, {available['FAKE']} FAKE -> "
+              f"quota totale {total_quota} (train={train_quota}, test={test_quota})", flush=True)
+    else:
+        train_quota = n_per_class
+        test_quota = n_per_class
+ 
+    raw_ds = load_dataset("parquet", data_files=train_files, split="train", streaming=True)
+    train_ds, test_ds = make_streaming_split(raw_ds, test_fraction=0.2)
  
     print(" Split: train")
     extract_split(train_ds, cfg["label_column"], real_value, DATA_DIR / name / "train",
-                   n_per_class, all_mode, shuffle_buffer)
+                   train_quota, False, shuffle_buffer)
     print(" Split: test")
     extract_split(test_ds, cfg["label_column"], real_value, DATA_DIR / name / "test",
-                   n_per_class, all_mode, shuffle_buffer)
+                   test_quota, False, shuffle_buffer)
  
  
 def main():
