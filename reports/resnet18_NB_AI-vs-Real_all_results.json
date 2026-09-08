@@ -1,0 +1,65 @@
+{
+  "output_name": "resnet18_NB_AI-vs-Real_all",
+  "data_dirs": [
+    "data/NB_AI-vs-Real"
+  ],
+  "n_per_class_train": "all",
+  "n_per_class_test": "all",
+  "num_epochs": 10,
+  "class_names": [
+    "FAKE",
+    "REAL"
+  ],
+  "train_size": 11199,
+  "test_size": 2666,
+  "epoch_losses": [
+    0.2172110674051302,
+    0.13025280436766998,
+    0.11655404706219477,
+    0.11225228217297367,
+    0.10134170041020428,
+    0.10119722438443984,
+    0.09474759383526231,
+    0.09331109143926629,
+    0.08997793795807021,
+    0.0954122250274356
+  ],
+  "test_accuracy": 96.88672168042011,
+  "confusion_matrix": [
+    [
+      614,
+      52
+    ],
+    [
+      31,
+      1969
+    ]
+  ],
+  "classification_report": {
+    "FAKE": {
+      "precision": 0.951937984496124,
+      "recall": 0.9219219219219219,
+      "f1-score": 0.9366895499618612,
+      "support": 666.0
+    },
+    "REAL": {
+      "precision": 0.9742701632855022,
+      "recall": 0.9845,
+      "f1-score": 0.9793583685650336,
+      "support": 2000.0
+    },
+    "accuracy": 0.9688672168042011,
+    "macro avg": {
+      "precision": 0.9631040738908131,
+      "recall": 0.9532109609609609,
+      "f1-score": 0.9580239592634474,
+      "support": 2666.0
+    },
+    "weighted avg": {
+      "precision": 0.9686913069187633,
+      "recall": 0.9688672168042011,
+      "f1-score": 0.9686991663183295,
+      "support": 2666.0
+    }
+  }
+}
