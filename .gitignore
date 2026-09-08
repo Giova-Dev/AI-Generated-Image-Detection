@@ -4,3 +4,7 @@ venv/
 venv311/
 src/__pycache__/
 eda/
+dataset/*
+
+
+!dataset/download_datasets.txt

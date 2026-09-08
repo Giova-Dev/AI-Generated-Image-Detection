@@ -1,0 +1,3 @@
+hf download Rajarshi-Roy-research/Defactify_Image_Dataset --repo-type dataset --local-dir ~/Progetto/dataset/Defactify_Image_Dataset
+hf download Parveshiiii/AI-vs-Real --repo-type dataset --local-dir ~/Progetto/dataset/AI-vs-Real
+hf download Hemg/AI-Generated-vs-Real-Images-Datasets --repo-type dataset --local-dir ~/Progetto/dataset/AI-Generated-vs-Real-Images-Datasets
