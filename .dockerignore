@@ -1,0 +1,9 @@
+data/
+dataset/
+venv/
+venv311/
+src/__pycache__/
+*.pyc
+.git/
+eda/
+test_results/
