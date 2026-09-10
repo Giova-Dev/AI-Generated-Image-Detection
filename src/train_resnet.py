@@ -23,6 +23,8 @@ from src.utils import device, load_combined
 MODEL_DIR = Path("models")
 REPORT_DIR = Path("reports")
 NUM_EPOCHS = 10
+BATCH_SIZE = 16
+NUM_WORKERS = 4
 
 transform = transforms.Compose([
     transforms.Resize(256),                
@@ -114,10 +116,12 @@ def main():
                          help="Usa tutte le immagini disponibili per classe (ignora --n_per_class_train/test)")
     parser.add_argument("--output_name", default=None,
                          help="Nome del checkpoint (default: generato da dataset e dimensione)")
-    parser.add_argument("--num_workers", type=int, default=4,
+    parser.add_argument("--num_workers", type=int, default=NUM_WORKERS,
                          help="Processi paralleli per il caricamento immagini")
     parser.add_argument("--lr_candidates", nargs="+", type=float, default=[0.001, 0.0001, 0.01],
                          help="Learning rate da confrontare, es. --lr_candidates 0.001 0.0001 0.01")
+    parser.add_argument("--batch_size", type=int, default=BATCH_SIZE,
+                         help="Batch size per l'estrazione feature")
     args = parser.parse_args()
 
     n_per_class_train = None if args.all else args.n_per_class_train
@@ -141,11 +145,11 @@ def main():
     print(f"Train totale: {len(train_data)} immagini, Test totale: {len(test_data)} immagini")
 
     train_loader = DataLoader(
-        train_data, batch_size=32, shuffle=True,
+        train_data, batch_size=args.batch_size, shuffle=True,
         num_workers=args.num_workers, pin_memory=(device.type == "cuda"),
     )
     test_loader = DataLoader(
-        test_data, batch_size=32,
+        test_data, batch_size=args.batch_size,
         num_workers=args.num_workers, pin_memory=(device.type == "cuda"),
     )
 

@@ -22,6 +22,8 @@ from src.utils import SEED, device, load_clip_model, load_combined
 
 MODEL_DIR = Path("models")
 REPORT_DIR = Path("reports")
+BATCH_SIZE = 16
+NUM_WORKERS = 4
 
 
 def extract_features(loader, clip_model):
@@ -37,7 +39,7 @@ def extract_features(loader, clip_model):
 
 
 def main():
-    parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser()
     parser.add_argument("--datasets", nargs="+", default=["CIFAKE"],
                          help="Sottocartelle di data/ da usare, es. --datasets CIFAKE AI-vs-Real")
     parser.add_argument("--n_per_class_train", type=int, default=5000,
@@ -48,9 +50,9 @@ def main():
                          help="Usa tutte le immagini disponibili per classe (ignora --n_per_class_train/test)")
     parser.add_argument("--output_name", default=None,
                          help="Nome del checkpoint (default: generato da dataset e dimensione)")
-    parser.add_argument("--num_workers", type=int, default=4,
+    parser.add_argument("--num_workers", type=int, default=NUM_WORKERS,
                          help="Processi paralleli per il caricamento immagini")
-    parser.add_argument("--batch_size", type=int, default=256,
+    parser.add_argument("--batch_size", type=int, default=BATCH_SIZE,
                          help="Batch size per l'estrazione feature")
     args = parser.parse_args()
 
