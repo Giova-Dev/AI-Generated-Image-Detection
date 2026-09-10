@@ -20,6 +20,20 @@ OUT_DIR = Path("eda")
 SEED = 42
 COMMON_SIZE = (128, 128)
 
+sns.set_theme(style="whitegrid", context="notebook", font_scale=1.05)
+plt.rcParams.update({
+    "figure.dpi": 110,
+    "savefig.dpi": 150,
+    "savefig.bbox": "tight",
+    "axes.titlesize": 12,
+    "axes.titleweight": "bold",
+    "axes.labelsize": 10,
+    "axes.spines.top": False,
+    "axes.spines.right": False,
+    "legend.frameon": False,
+    "figure.facecolor": "white",
+})
+
 
 def discover_datasets():
     return [d for d in sorted(DATA_DIR.iterdir())
@@ -38,20 +52,26 @@ def count_images(dataset_dir):
 
 def plot_sample_grid(dataset_dir, out_dir, n_per_class=5):
     random.seed(SEED)
-    fig, axes = plt.subplots(2, n_per_class, figsize=(2 * n_per_class, 4.5))
+    fig, axes = plt.subplots(
+        2, n_per_class,
+        figsize=(2.2 * n_per_class, 5.0),
+        gridspec_kw={"hspace": 0.05, "wspace": 0.05},
+    )
     for row, label in enumerate(["REAL", "FAKE"]):
         paths = list((dataset_dir / "train" / label).glob("*.jpg"))
         sample = random.sample(paths, min(n_per_class, len(paths)))
-        for col, p in enumerate(sample):
-            axes[row, col].imshow(Image.open(p))
-            axes[row, col].axis("off")
-        axes[row, 0].set_ylabel(label, fontsize=12)
-        axes[row, 0].axis("on")
-        axes[row, 0].set_xticks([])
-        axes[row, 0].set_yticks([])
-    fig.suptitle(f"Esempi REAL vs FAKE - {dataset_dir.name}")
-    fig.tight_layout()
-    fig.savefig(out_dir / "sample_grid.png", dpi=120)
+        for col in range(n_per_class):
+            ax = axes[row, col]
+            if col < len(sample):
+                ax.imshow(Image.open(sample[col]))
+            ax.set_xticks([])
+            ax.set_yticks([])
+            for s in ax.spines.values():
+                s.set_visible(False)
+        axes[row, 0].set_ylabel(label, fontsize=11, rotation=90, labelpad=8)
+        axes[row, 0].yaxis.set_label_position("left")
+    fig.suptitle(f"Esempi REAL vs FAKE - {dataset_dir.name}", fontsize=13)
+    fig.savefig(out_dir / "sample_grid.png")
     plt.close(fig)
 
 
@@ -68,11 +88,19 @@ def brightness_distribution(dataset_dir, n_per_class=1000):
 
 
 def plot_brightness(df, out_dir, dataset_name):
-    fig, ax = plt.subplots(figsize=(6, 4))
-    sns.histplot(data=df, x="mean_brightness", hue="label", kde=True, ax=ax)
+    fig, ax = plt.subplots(figsize=(7, 4.2))
+    sns.histplot(
+        data=df, x="mean_brightness", hue="label",
+        hue_order=["REAL", "FAKE"], palette="deep",
+        kde=True, bins=40, alpha=0.5,
+        edgecolor="white", linewidth=0.3,
+        common_norm=False, stat="density",
+        ax=ax,
+    )
     ax.set_title(f"Distribuzione luminosita' - {dataset_name}")
-    fig.tight_layout()
-    fig.savefig(out_dir / "brightness_distribution.png", dpi=120)
+    ax.set_xlabel("Luminosita' media")
+    ax.set_ylabel("Densita'")
+    fig.savefig(out_dir / "brightness_distribution.png")
     plt.close(fig)
 
 
@@ -80,7 +108,6 @@ def mean_image(dataset_dir, label, n=1000):
     random.seed(SEED)
     paths = list((dataset_dir / "train" / label).glob("*.jpg"))
     sample = random.sample(paths, min(n, len(paths)))
-
     arrs = np.stack([
         np.array(Image.open(p).convert("RGB").resize(COMMON_SIZE), dtype=np.float32)
         for p in sample
@@ -89,14 +116,15 @@ def mean_image(dataset_dir, label, n=1000):
 
 
 def plot_mean_images(dataset_dir, out_dir):
-    fig, axes = plt.subplots(1, 2, figsize=(6, 3))
+    fig, axes = plt.subplots(1, 2, figsize=(7.5, 3.8),
+                             gridspec_kw={"wspace": 0.05})
     for ax, label in zip(axes, ["REAL", "FAKE"]):
         ax.imshow(mean_image(dataset_dir, label))
-        ax.set_title(f"Media - {label}")
-        ax.axis("off")
-    fig.suptitle(dataset_dir.name)
-    fig.tight_layout()
-    fig.savefig(out_dir / "mean_images.png", dpi=120)
+        ax.set_title(f"Media - {label}", fontsize=12)
+        ax.set_xticks([])
+        ax.set_yticks([])
+    fig.suptitle(dataset_dir.name, fontsize=13)
+    fig.savefig(out_dir / "mean_images.png")
     plt.close(fig)
 
 
@@ -120,35 +148,51 @@ def analyze_dataset(dataset_dir):
 
 
 def plot_dataset_sizes(all_counts, out_dir):
-    train_counts = all_counts[all_counts["split"] == "train"]
-    fig, ax = plt.subplots(figsize=(7, 4))
-    sns.barplot(data=train_counts, x="dataset", y="count", hue="label", ax=ax)
+    train_counts = all_counts[all_counts["split"] == "train"].copy()
+    fig, ax = plt.subplots(figsize=(8, 4.5))
+    sns.barplot(
+        data=train_counts, x="dataset", y="count",
+        hue="label", hue_order=["REAL", "FAKE"],
+        palette="deep", ax=ax,
+        edgecolor="white", linewidth=0.8,
+    )
+    for container in ax.containers:
+        ax.bar_label(container, fmt="%d", padding=2, fontsize=9)
     ax.set_title("Immagini per classe, per dataset (train)")
-    ax.tick_params(axis="x", rotation=20)
-    fig.tight_layout()
-    fig.savefig(out_dir / "dataset_sizes.png", dpi=120)
+    ax.set_xlabel("")
+    ax.set_ylabel("Numero di immagini")
+    ax.tick_params(axis="x", rotation=15)
+    ax.legend(title=None)
+    ax.margins(y=0.12)
+    fig.savefig(out_dir / "dataset_sizes.png")
     plt.close(fig)
 
 
 def plot_sample_grid_all_datasets(dataset_dirs, out_dir, label, n_per_dataset=4):
     random.seed(SEED)
-    fig, axes = plt.subplots(len(dataset_dirs), n_per_dataset,
-                              figsize=(2 * n_per_dataset, 2.2 * len(dataset_dirs)))
-    if len(dataset_dirs) == 1:
-        axes = axes.reshape(1, -1)
+    n_rows = len(dataset_dirs)
+    fig, axes = plt.subplots(
+        n_rows, n_per_dataset,
+        figsize=(2.2 * n_per_dataset, 2.4 * n_rows),
+        gridspec_kw={"hspace": 0.08, "wspace": 0.04},
+        squeeze=False,
+    )
     for row, dataset_dir in enumerate(dataset_dirs):
         paths = list((dataset_dir / "train" / label).glob("*.jpg"))
         sample = random.sample(paths, min(n_per_dataset, len(paths)))
-        for col, p in enumerate(sample):
-            axes[row, col].imshow(Image.open(p))
-            axes[row, col].axis("off")
-        axes[row, 0].set_ylabel(dataset_dir.name, fontsize=10)
-        axes[row, 0].axis("on")
-        axes[row, 0].set_xticks([])
-        axes[row, 0].set_yticks([])
-    fig.suptitle(f"Confronto tra dataset - classe {label}")
-    fig.tight_layout()
-    fig.savefig(out_dir / f"sample_grid_all_datasets_{label}.png", dpi=120)
+        for col in range(n_per_dataset):
+            ax = axes[row, col]
+            if col < len(sample):
+                ax.imshow(Image.open(sample[col]))
+            ax.set_xticks([])
+            ax.set_yticks([])
+            for s in ax.spines.values():
+                s.set_visible(False)
+        axes[row, 0].set_ylabel(dataset_dir.name, fontsize=10,
+                                rotation=90, labelpad=8)
+        axes[row, 0].yaxis.set_label_position("left")
+    fig.suptitle(f"Confronto tra dataset - classe {label}", fontsize=13, y=1.0)
+    fig.savefig(out_dir / f"sample_grid_all_datasets_{label}.png")
     plt.close(fig)
 
 
