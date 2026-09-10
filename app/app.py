@@ -10,9 +10,11 @@ import base64
 import io
 import json
 import pickle
+import sys
 from pathlib import Path
 
-import open_clip
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 import torch
 import torch.nn as nn
 import torchvision.models as models
@@ -20,14 +22,16 @@ from flask import Flask, jsonify, render_template, request
 from PIL import Image
 from torchvision import transforms
 
+from src.utils import device, load_clip_model
+
 MODEL_DIR = Path("models")
 REPORT_DIR = Path("reports")
 
 app = Flask(__name__)
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-resnet_transform = transforms.Compose([
-    transforms.Resize((224, 224)),
+transform = transforms.Compose([
+    transforms.Resize(256),                
+    transforms.CenterCrop(224),            
     transforms.ToTensor(),
     transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 ])
@@ -51,10 +55,7 @@ def list_results():
 def get_clip():
     global _clip
     if _clip is None:
-        clip_model, _, clip_preprocess = open_clip.create_model_and_transforms(
-            "ViT-B-32-quickgelu", pretrained="openai"
-        )
-        clip_model.eval().to(device)
+        clip_model, clip_preprocess = load_clip_model()
         _clip = (clip_model, clip_preprocess)
     return _clip
 
