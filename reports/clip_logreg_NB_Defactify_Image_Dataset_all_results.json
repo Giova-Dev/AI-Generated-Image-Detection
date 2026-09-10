@@ -6,13 +6,16 @@
   "n_per_class_train": "all",
   "n_per_class_test": "all",
   "num_epochs": "N/A",
+  "best_params": {
+    "C": 1
+  },
+  "cv_accuracy": 98.4918918918919,
   "class_names": [
     "FAKE",
     "REAL"
   ],
   "train_size": 37000,
   "test_size": 4585,
-  "epoch_losses": [],
   "test_accuracy": 95.2453653217012,
   "confusion_matrix": [
     [
