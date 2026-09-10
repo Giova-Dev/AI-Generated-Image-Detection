@@ -1,0 +1,48 @@
+{
+  "accuracy": 58.88138701342002,
+  "confusion_matrix": [
+    [
+      5317,
+      683
+    ],
+    [
+      4250,
+      1747
+    ]
+  ],
+  "classification_report": {
+    "FAKE": {
+      "precision": 0.555764607504965,
+      "recall": 0.8861666666666667,
+      "f1-score": 0.6831117106700071,
+      "support": 6000.0
+    },
+    "REAL": {
+      "precision": 0.7189300411522633,
+      "recall": 0.2913123228280807,
+      "f1-score": 0.4146196748546339,
+      "support": 5997.0
+    },
+    "accuracy": 0.5888138701342002,
+    "macro avg": {
+      "precision": 0.6373473243286142,
+      "recall": 0.5887394947473736,
+      "f1-score": 0.5488656927623206,
+      "support": 11997.0
+    },
+    "weighted avg": {
+      "precision": 0.6373269235492134,
+      "recall": 0.5888138701342002,
+      "f1-score": 0.5488992626592717,
+      "support": 11997.0
+    }
+  },
+  "total_samples": 11997,
+  "model_type": "clip_logreg",
+  "model_file": "clip_logreg_AI-vs-Real_all.pkl",
+  "model_class_names": [
+    "FAKE",
+    "REAL"
+  ],
+  "test_dir": "data/GLOBAL_TEST"
+}
