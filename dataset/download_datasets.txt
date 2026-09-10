@@ -3,3 +3,4 @@ hf download Parveshiiii/AI-vs-Real --repo-type dataset --local-dir ~/Progetto/da
 hf download Hemg/AI-Generated-vs-Real-Images-Datasets --repo-type dataset --local-dir ~/Progetto/dataset/AI-Generated-vs-Real-Images
 
 https://www.kaggle.com/datasets/tristanzhang32/ai-generated-images-vs-real-images/data
+https://www.kaggle.com/datasets/birdy654/cifake-real-and-ai-generated-synthetic-images
