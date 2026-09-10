@@ -3,8 +3,9 @@ data/
 venv/
 venv311/
 src/__pycache__/
-eda/
+eda/*
+eda/comparison/*png
 dataset/*
 
-
+!eda/comparison/
 !dataset/download_datasets.txt
