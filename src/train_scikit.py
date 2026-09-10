@@ -39,7 +39,7 @@ def extract_features(loader, clip_model):
 
 
 def main():
-parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser()
     parser.add_argument("--datasets", nargs="+", default=["CIFAKE"],
                          help="Sottocartelle di data/ da usare, es. --datasets CIFAKE AI-vs-Real")
     parser.add_argument("--n_per_class_train", type=int, default=5000,
