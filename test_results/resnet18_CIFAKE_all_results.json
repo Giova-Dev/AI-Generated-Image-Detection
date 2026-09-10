@@ -1,0 +1,48 @@
+{
+  "accuracy": 47.903642577311,
+  "confusion_matrix": [
+    [
+      5245,
+      755
+    ],
+    [
+      5495,
+      502
+    ]
+  ],
+  "classification_report": {
+    "FAKE": {
+      "precision": 0.4883612662942272,
+      "recall": 0.8741666666666666,
+      "f1-score": 0.6266427718040621,
+      "support": 6000.0
+    },
+    "REAL": {
+      "precision": 0.39936356404136836,
+      "recall": 0.08370852092713023,
+      "f1-score": 0.1384063964709126,
+      "support": 5997.0
+    },
+    "accuracy": 0.47903642577310995,
+    "macro avg": {
+      "precision": 0.4438624151677978,
+      "recall": 0.47893759379689843,
+      "f1-score": 0.38252458413748736,
+      "support": 11997.0
+    },
+    "weighted avg": {
+      "precision": 0.44387354266245305,
+      "recall": 0.47903642577310995,
+      "f1-score": 0.3825856289456061,
+      "support": 11997.0
+    }
+  },
+  "total_samples": 11997,
+  "model_type": "resnet18",
+  "model_file": "resnet18_CIFAKE_all.pth",
+  "model_class_names": [
+    "FAKE",
+    "REAL"
+  ],
+  "test_dir": "data/GLOBAL_TEST"
+}

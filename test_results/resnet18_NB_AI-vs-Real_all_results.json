@@ -1,0 +1,48 @@
+{
+  "accuracy": 63.957656080686846,
+  "confusion_matrix": [
+    [
+      3563,
+      2437
+    ],
+    [
+      1887,
+      4110
+    ]
+  ],
+  "classification_report": {
+    "FAKE": {
+      "precision": 0.6537614678899083,
+      "recall": 0.5938333333333333,
+      "f1-score": 0.62235807860262,
+      "support": 6000.0
+    },
+    "REAL": {
+      "precision": 0.6277684435619367,
+      "recall": 0.6853426713356678,
+      "f1-score": 0.6552933673469388,
+      "support": 5997.0
+    },
+    "accuracy": 0.6395765608068684,
+    "macro avg": {
+      "precision": 0.6407649557259225,
+      "recall": 0.6395880023345006,
+      "f1-score": 0.6388257229747794,
+      "support": 11997.0
+    },
+    "weighted avg": {
+      "precision": 0.6407682056664487,
+      "recall": 0.6395765608068684,
+      "f1-score": 0.6388216050342013,
+      "support": 11997.0
+    }
+  },
+  "total_samples": 11997,
+  "model_type": "resnet18",
+  "model_file": "resnet18_NB_AI-vs-Real_all.pth",
+  "model_class_names": [
+    "FAKE",
+    "REAL"
+  ],
+  "test_dir": "data/GLOBAL_TEST"
+}
