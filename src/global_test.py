@@ -5,7 +5,7 @@ Supporta sia modelli PyTorch (.pth, ResNet18) sia modelli scikit-learn (.pkl, CL
 
 Uso:
     python -m src.global_test
-    python -m src.global_test --models_dir models --test_dir data/global_test --output_dir test_results
+    python -m src.global_test --models_dir models --test_dir data/GLOBAL_TEST --output_dir test_results
 """
 import argparse
 import json
@@ -13,12 +13,16 @@ import pickle
 from pathlib import Path
 
 import numpy as np
-import open_clip
 import torch
 import torch.nn as nn
+from PIL import Image
 from sklearn.metrics import classification_report, confusion_matrix
 from torch.utils.data import DataLoader
 from torchvision import datasets, models, transforms
+
+from src.utils import device, load_clip_model
+
+Image.MAX_IMAGE_PIXELS = None
 
 MODEL_DIR = Path("models")
 TEST_DIR = Path("data/GLOBAL_TEST")
@@ -26,16 +30,36 @@ OUTPUT_DIR = Path("test_results")
 BATCH_SIZE = 32
 NUM_WORKERS = 4
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-transform_resnet = transforms.Compose([
-    transforms.Resize((224, 224)),
+transform = transforms.Compose([
+    transforms.Resize(256),                
+    transforms.CenterCrop(224),            
     transforms.ToTensor(),
     transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 ])
 
 clip_model = None
 preprocess_clip = None
+
+
+def is_valid_image(path):
+    """Scarta i file non decodificabili da PIL prima che il DataLoader li carichi."""
+    try:
+        with Image.open(path) as im:
+            im.verify()
+        return True
+    except Exception:
+        return False
+
+
+def safe_pil_loader(path):
+    """Apre un'immagine e la converte in RGB. Le immagini in modalita' palette (P)
+    con trasparenza vengono prima convertite in RGBA, per evitare il warning di PIL
+    sulla conversione implicita."""
+    with open(path, "rb") as f:
+        img = Image.open(f)
+        if img.mode == "P" and "transparency" in img.info:
+            img = img.convert("RGBA")
+        return img.convert("RGB")
 
 
 def list_available_models(models_dir):
@@ -127,6 +151,9 @@ def main():
     parser.add_argument("--num_workers", type=int, default=NUM_WORKERS)
     args = parser.parse_args()
 
+    if not args.test_dir.exists():
+        raise FileNotFoundError(f"Cartella di test non trovata: {args.test_dir}")
+
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
     model_files = list_available_models(args.models_dir)
@@ -142,7 +169,12 @@ def main():
     test_loader_resnet = None
     if torch_models:
         print("Caricamento dataset di test per ResNet18...")
-        test_dataset_resnet = datasets.ImageFolder(str(args.test_dir), transform=transform_resnet)
+        test_dataset_resnet = datasets.ImageFolder(
+            str(args.test_dir),
+            transform=transform,
+            loader=safe_pil_loader,
+            is_valid_file=is_valid_image,
+        )
         test_loader_resnet = DataLoader(
             test_dataset_resnet,
             batch_size=args.batch_size,
@@ -155,11 +187,13 @@ def main():
     test_loader_clip = None
     if logreg_models:
         print("Caricamento dataset di test per CLIP...")
-        clip_model, _, preprocess_clip = open_clip.create_model_and_transforms(
-            "ViT-B-32-quickgelu", pretrained="openai"
+        clip_model, preprocess_clip = load_clip_model()
+        test_dataset_clip = datasets.ImageFolder(
+            str(args.test_dir),
+            transform=preprocess_clip,
+            loader=safe_pil_loader,
+            is_valid_file=is_valid_image,
         )
-        clip_model.eval().to(device)
-        test_dataset_clip = datasets.ImageFolder(str(args.test_dir), transform=preprocess_clip)
         test_loader_clip = DataLoader(
             test_dataset_clip,
             batch_size=args.batch_size,
