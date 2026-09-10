@@ -29,7 +29,7 @@ REPORT_DIR = Path("reports")
 
 app = Flask(__name__)
 
-transform = transforms.Compose([
+resnet_transform = transforms.Compose([
     transforms.Resize(256),                
     transforms.CenterCrop(224),            
     transforms.ToTensor(),
@@ -46,9 +46,29 @@ def list_available_models():
 
 def list_results():
     results = []
-    for json_path in sorted(REPORT_DIR.glob("*_results.json")):
-        with open(json_path) as f:
-            results.append(json.load(f))
+    seen_names = set()
+    for directory in (REPORT_DIR, MODEL_DIR):
+        if not directory.exists():
+            continue
+        for json_path in sorted(directory.glob("*.json")):
+            if json_path.name in seen_names:
+                continue
+            try:
+                with open(json_path, encoding="utf-8") as f:
+                    data = json.load(f)
+            except (json.JSONDecodeError, OSError) as e:
+                print(f"Impossibile leggere {json_path}: {e}")
+                continue
+
+            if not isinstance(data, dict):
+                continue
+            # Scarta file che non sono report di performance
+            if "test_accuracy" not in data or "class_names" not in data:
+                continue
+
+            seen_names.add(json_path.name)
+            data["report_file"] = json_path.name
+            results.append(data)
     return results
 
 
