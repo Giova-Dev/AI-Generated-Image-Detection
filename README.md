@@ -3,7 +3,7 @@
 Progetto universitario per il rilevamento di immagini generate da intelligenza artificiale.
 
 **Corso:** Laboratorio di intelligenza artificiale applicata  
-**Autore:** Santini Giovanni
+**Autore:** Santini Giovanni 
 **Anno accademico:** 2025/2026
 
 ## Descrizione
