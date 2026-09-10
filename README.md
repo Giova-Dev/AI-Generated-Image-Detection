@@ -182,7 +182,7 @@ I modelli addestrati devono essere presenti nella cartella `models/`.
 
 ```bash
 docker build -t ai-image-detector .
-docker run -p 5000:5000
+docker run -p 5000:5000 ai-image-detector
 ```
 
 Per l'addestramento usare un ambiente Python locale con `requirements-train.txt`.
