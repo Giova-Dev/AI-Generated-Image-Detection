@@ -133,7 +133,6 @@ def main():
         "class_names": class_names,
         "train_size": len(train_data),
         "test_size": len(test_data),
-        "epoch_losses": [],
         "test_accuracy": test_accuracy,
         "confusion_matrix": cm.tolist(),
         "classification_report": report_dict,
