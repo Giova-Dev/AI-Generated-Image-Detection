@@ -129,10 +129,23 @@ def predict():
                                 error="Seleziona almeno un modello.")
 
     image_bytes = file.read()
-    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    try:
+        image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    except Exception:
+        return render_template("index.html", available_models=available_models,
+                                error="Immagine non valida o corrotta.")
     image_b64 = base64.b64encode(image_bytes).decode("utf-8")
 
-    results = [predict_with_model(m, image) for m in selected_models]
+    results = []
+    for m in selected_models:
+        try:
+            results.append(predict_with_model(m, image))
+        except Exception as e:
+            print(f"Errore durante la predizione con {m}: {e}")
+
+    if not results:
+        return render_template("index.html", available_models=available_models,
+                                error="Nessun modello selezionato e' riuscito a produrre una predizione.")
 
     for r in results:
         r['probabilities_percent'] = {
@@ -154,8 +167,17 @@ def api_predict():
     if not selected_models:
         return jsonify({"error": "Nessun modello disponibile in models/"}), 400
 
-    image = Image.open(file.stream).convert("RGB")
-    results = [predict_with_model(m, image) for m in selected_models]
+    try:
+        image = Image.open(file.stream).convert("RGB")
+    except Exception:
+        return jsonify({"error": "Immagine non valida o corrotta"}), 400
+
+    results = []
+    for m in selected_models:
+        try:
+            results.append(predict_with_model(m, image))
+        except Exception as e:
+            results.append({"model": m, "error": str(e)})
     return jsonify({"results": results})
 
 
