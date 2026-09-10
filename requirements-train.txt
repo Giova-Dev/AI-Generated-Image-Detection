@@ -1,0 +1,5 @@
+-r requirements-app.txt
+datasets
+pandas
+matplotlib
+seaborn
