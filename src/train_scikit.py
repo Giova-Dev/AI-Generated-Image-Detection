@@ -9,56 +9,19 @@ Uso:
 import argparse
 import json
 import pickle
-import random
 from pathlib import Path
 
 import numpy as np
-import open_clip
 import torch
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report, confusion_matrix
-from torch.utils.data import ConcatDataset, DataLoader, Subset
-from torchvision import datasets
+from sklearn.model_selection import GridSearchCV
+from torch.utils.data import DataLoader
+
+from src.utils import SEED, device, load_clip_model, load_combined
 
 MODEL_DIR = Path("models")
 REPORT_DIR = Path("reports")
-SEED = 42
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-
-def balanced_subset(dataset, n_per_class, seed=SEED):
-    """Restituisce un Subset con al massimo n_per_class immagini per classe.
-    Se n_per_class e' None, usa tutte le immagini disponibili per classe."""
-    random.seed(seed)
-    indices_by_class = {}
-    for idx, (_, label) in enumerate(dataset.samples):
-        indices_by_class.setdefault(label, []).append(idx)
-
-    selected = []
-    for indices in indices_by_class.values():
-        if n_per_class is None:
-            selected += indices
-        else:
-            selected += random.sample(indices, min(n_per_class, len(indices)))
-    return Subset(dataset, selected)
-
-
-def load_combined(split, n_per_class, data_dirs, preprocess):
-    subsets = []
-    class_names = None
-    for data_dir in data_dirs:
-        full = datasets.ImageFolder(str(data_dir / split), transform=preprocess)
-        if class_names is None:
-            class_names = full.classes
-        else:
-            assert full.classes == class_names, (
-                f"Le classi di {data_dir} ({full.classes}) non coincidono con {class_names}"
-            )
-        subset = balanced_subset(full, n_per_class)
-        print(f"  {data_dir}/{split}: {len(subset)} immagini")
-        subsets.append(subset)
-    return ConcatDataset(subsets), class_names
 
 
 def extract_features(loader, clip_model):
@@ -104,10 +67,7 @@ def main():
 
     print(f"Device: {device}")
 
-    clip_model, _, preprocess = open_clip.create_model_and_transforms(
-        "ViT-B-32-quickgelu", pretrained="openai"
-    )
-    clip_model.eval().to(device)
+    clip_model, preprocess = load_clip_model()
 
     print("Caricamento train:")
     train_data, class_names = load_combined("train", n_per_class_train, data_dirs, preprocess)
@@ -131,8 +91,15 @@ def main():
     print("Estrazione feature CLIP (test)...")
     X_test, y_test = extract_features(test_loader, clip_model)
 
-    clf = LogisticRegression(max_iter=1000, random_state=SEED)
-    clf.fit(X_train, y_train)
+    print("Ricerca del miglior C per la Logistic Regression (GridSearchCV)...")
+    param_grid = {"C": [0.01, 0.1, 1, 10, 100]}
+    grid_search = GridSearchCV(
+        LogisticRegression(max_iter=1000, random_state=SEED),
+        param_grid, cv=5, scoring="accuracy", n_jobs=-1,
+    )
+    grid_search.fit(X_train, y_train)
+    clf = grid_search.best_estimator_
+    print(f"Miglior C: {grid_search.best_params_['C']} (CV accuracy: {grid_search.best_score_ * 100:.2f}%)")
 
     train_accuracy = clf.score(X_train, y_train) * 100
     print(f"Train Accuracy: {train_accuracy:.2f}%")
@@ -159,6 +126,8 @@ def main():
         "n_per_class_train": n_per_class_train if n_per_class_train is not None else "all",
         "n_per_class_test": n_per_class_test if n_per_class_test is not None else "all",
         "num_epochs": "N/A",
+        "best_params": grid_search.best_params_,
+        "cv_accuracy": grid_search.best_score_ * 100,
         "class_names": class_names,
         "train_size": len(train_data),
         "test_size": len(test_data),
