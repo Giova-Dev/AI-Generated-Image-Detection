@@ -70,8 +70,6 @@ def count_labels(ds, label_column, real_value):
  
  
 def extract_split(ds, label_column, real_value, out_split_dir, n_per_class, all_mode, shuffle_buffer):
-    # il conteggio va fatto PRIMA dello shuffle, altrimenti riempire il buffer
-    # di shuffle forza gia' la decodifica delle immagini bufferizzate
     if all_mode:
         print("  Conteggio etichette...", flush=True)
         available = count_labels(ds, label_column, real_value)
@@ -82,8 +80,19 @@ def extract_split(ds, label_column, real_value, out_split_dir, n_per_class, all_
  
     ds = ds.shuffle(seed=SEED, buffer_size=shuffle_buffer)
     ds_iter = iter(ds)
-    first_example = next(ds_iter)
-    image_column = detect_image_column(first_example)
+    first_example = None
+    image_column = None
+    for example in ds_iter:
+        try:
+            image_column = detect_image_column(example)
+            example[image_column].convert("RGB")
+            first_example = example
+            break
+        except Exception as e:
+            print(f"  [SKIP] immagine corrotta: {e}", flush=True)
+    if first_example is None:
+        print(f"  Nessuna immagine valida trovata in {out_split_dir}", flush=True)
+        return
  
     counts = {"REAL": 0, "FAKE": 0}
     for folder in counts:
@@ -93,8 +102,12 @@ def extract_split(ds, label_column, real_value, out_split_dir, n_per_class, all_
         folder = "REAL" if example[label_column] == real_value else "FAKE"
         if counts[folder] >= quota:
             return
-        img = example[image_column].convert("RGB")
-        img.save(out_split_dir / folder / f"{idx}.jpg")
+        try:
+            img = example[image_column].convert("RGB")
+            img.save(out_split_dir / folder / f"{idx}.jpg")
+        except Exception as e:
+            print(f"  [SKIP] immagine corrotta (idx={idx}): {e}", flush=True)
+            return
         counts[folder] += 1
  
     save(first_example, 0)
@@ -106,7 +119,7 @@ def extract_split(ds, label_column, real_value, out_split_dir, n_per_class, all_
             print(f"  Progresso: {counts['REAL']} REAL, {counts['FAKE']} FAKE...", flush=True)
  
     print(f"  Salvate {counts['REAL']} REAL, {counts['FAKE']} FAKE in {out_split_dir}", flush=True)
- 
+
  
 def process_dataset(dataset_dir, n_per_class, all_mode, shuffle_buffer):
     name = dataset_dir.name
