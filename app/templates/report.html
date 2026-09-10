@@ -2,53 +2,44 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Report - AI Image Detector</title>
-  <style>
-    body { font-family: sans-serif; max-width: 600px; margin: 50px auto; padding: 0 16px; }
-    h1 { font-size: 1.4rem; }
-    img.uploaded { max-width: 100%; max-height: 260px; border-radius: 8px; margin: 16px 0; }
-    .result-card { border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin-bottom: 14px; }
-    .result-card h3 { margin: 0 0 8px 0; font-size: 1rem; font-family: monospace; }
-    .verdict { display: inline-block; padding: 4px 10px; border-radius: 6px; font-weight: bold; }
-    .verdict.REAL { background: #e6f4ea; color: #1e7e34; }
-    .verdict.FAKE { background: #fdecea; color: #c0392b; }
-    .prob-row { display: flex; align-items: center; margin-top: 8px; font-size: 0.9rem; }
-    .prob-label { width: 60px; }
-    .prob-bar-bg { flex: 1; background: #eee; border-radius: 4px; height: 10px; margin: 0 8px; overflow: hidden; }
-    .prob-bar-fill { height: 100%; background: #555; width: 0; transition: width 0.3s; }
-    a.back { display: inline-block; margin-top: 20px; }
-  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-  <h1>Report</h1>
-  <img class="uploaded" src="data:image/jpeg;base64,{{ image_b64 }}" alt="Immagine caricata">
+  <div class="container">
+    <a class="back" href="/">&larr; Analizza un'altra immagine</a>
+    <header class="page-header">
+      <h1>Report</h1>
+      <p>Risultati dei modelli selezionati sull'immagine caricata.</p>
+    </header>
 
-  {% for r in results %}
-  <div class="result-card">
-    <h3>{{ r.model }}</h3>
-    <span class="verdict {{ r.label }}">{{ r.label }}</span>
-    <span>({{ r.confidence_percent }}% confidenza)</span>
-    {% for label, prob_percent in r.probabilities_percent.items() %}
-    <div class="prob-row">
-      <span class="prob-label">{{ label }}</span>
-      <div class="prob-bar-bg">
-        <div class="prob-bar-fill" data-width="{{ prob_percent }}"></div>
+    <img class="uploaded" src="data:image/jpeg;base64,{{ image_b64 }}" alt="Immagine caricata">
+
+    {% for r in results %}
+    <div class="result-card">
+      <h3>{{ r.model }}</h3>
+      <span class="verdict {{ r.label }}">{{ r.label }}</span>
+      <span class="confidence">{{ r.confidence_percent }}% confidenza</span>
+
+      {% for label, prob_percent in r.probabilities_percent.items() %}
+      <div class="prob-row">
+        <span class="prob-label">{{ label }}</span>
+        <div class="prob-bar-bg">
+          <div class="prob-bar-fill" data-width="{{ prob_percent }}"></div>
+        </div>
+        <span class="prob-value">{{ prob_percent }}%</span>
       </div>
-      <span>{{ prob_percent }}%</span>
+      {% endfor %}
     </div>
     {% endfor %}
   </div>
-  {% endfor %}
-
-  <a class="back" href="/">&larr; Analizza un'altra immagine</a>
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       document.querySelectorAll('.prob-bar-fill').forEach(function(el) {
         var width = el.getAttribute('data-width');
-        if (width) {
-          el.style.width = width + '%';
-        }
+        if (width) requestAnimationFrame(() => { el.style.width = width + '%'; });
       });
     });
   </script>
